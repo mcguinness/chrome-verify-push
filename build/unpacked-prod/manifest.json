@@ -1,0 +1,53 @@
+{
+    "manifest_version": 2,
+    "name": "okta-verify-push",
+    "version": "0.1.2",
+    "description": "Okta Verify Push Authenticator Chrome Extension",
+    "icons": {
+        "128": "images/mfa-okta-verify.png"
+    },
+    "browser_action": {
+        "default_icon": "images/mfa-okta-verify.png",
+        "default_popup": "html/popup.html"
+    },
+    "background": {
+        "scripts": [
+            "js/background.js"
+        ]
+    },
+    "options_page": "html/options.html",
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "css": [
+                "css/common.css"
+            ],
+            "js": [
+                "js/content.js"
+            ]
+        }
+    ],
+    "optional_permissions": [
+        "clipboardWrite"
+    ],
+    "permissions": [
+        "activeTab",
+        "background",
+        "clipboardWrite",
+        "gcm",
+        "geolocation",
+        "idle",
+        "notifications",
+        "storage",
+        "http://*.okta1.com/"
+    ],
+    "web_accessible_resources": [
+        "js/*",
+        "html/*",
+        "css/*",
+        "images/*"
+    ],
+    "content_security_policy": "script-src 'self'; object-src 'self'"
+}
