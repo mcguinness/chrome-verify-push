@@ -45,6 +45,7 @@ module.exports = function(grunt) {
               src: ['**/bootstrap*.js'],
               dest: 'code/dist/'
           },
+
           {
               expand: true,
               cwd: 'bower_components/jquery/dist/',
@@ -157,7 +158,7 @@ module.exports = function(grunt) {
   grunt.registerTask(
     'manifest', 'Extend manifest.json with extra fields from package.json',
     function() {
-      var fields = ['name', 'version', 'description'];
+      var fields = ['version', 'description'];
       for (var i = 0; i < fields.length; i++) {
         var field = fields[i];
         mnf[field] = pkg[field];

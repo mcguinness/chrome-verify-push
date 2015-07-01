@@ -3,6 +3,7 @@ var KeyStore  = require('./keystore').KeyStore;
 var Base64    = require('js-base64').Base64;
 var axios     = require('axios');
 var config    = require('./config');
+var url       = require('url');
 
 var Base64Url = {
   encode: function (str) {
@@ -42,11 +43,16 @@ var Authenticator = function() {
 
 _.extend(Authenticator.prototype, {
 
+  enrollProtocol: function(enrollUrl) {
+    var urlParts = url.parse(enrollUrl, true);
+    return this.enroll(urlParts.query.f, urlParts.query.s, urlParts.query.t);
+  },
+
   enroll: function(factorId, baseUrl, activationToken) {
     var self = this;
     return new Promise(function(resolve, reject) {
 
-      var factorKey = new self._keyStore.model({
+      var factorModel = new self._keyStore.model({
         id: factorId,
         domain: baseUrl
       });
@@ -55,13 +61,13 @@ _.extend(Authenticator.prototype, {
         if (chrome.runtime.lastError) {
           return reject(chrome.runtime.lastError);
         }
-        return factorKey.generateKeyPair()
+        return factorModel.generateKeyPair()
           .then(function(keyPair) {
             return window.crypto.subtle.exportKey('spki', keyPair.publicKey);
           })
           .then(function(spki) {
 
-            factorKey.set({
+            factorModel.set({
               spki: Uint8ArrayBuffer.toBase64(new Uint8Array(spki))
             });
 
@@ -86,7 +92,7 @@ _.extend(Authenticator.prototype, {
                           use: "sig",
                           kid: "default",
                           x5c: [
-                            factorKey.get('spki')
+                            factorModel.get('spki')
                           ]
                         }
                       ]
@@ -115,7 +121,7 @@ _.extend(Authenticator.prototype, {
             .then(function (resp) {
               console.log(resp);
 
-              factorKey.set({
+              factorModel.set({
                 login: _.find(resp.data._embedded.factors,  function(factor) {
                           return factor.factorType === 'push';
                         }).profile.credentialId,
@@ -123,8 +129,8 @@ _.extend(Authenticator.prototype, {
                           return factor.factorType === 'token:software:totp';
                         })._embedded.activation.sharedSecret
               });
-              factorKey.save();
-              resolve(factorKey);
+              factorModel.save();
+              resolve(factorModel);
             })
             .catch(function (resp) {
               console.log(resp);
@@ -139,13 +145,13 @@ _.extend(Authenticator.prototype, {
     });
   },
 
-  verify: function(factorId, userId, txId, domain) {
+  verify: function(txId, approve, factorId, userId, domain) {
 
     var self = this;
-    var factorKey = new self._keyStore.model({id: factorId});
+    var factorModel = new self._keyStore.model({id: factorId});
 
     return new Promise(function(resolve, reject) {
-      factorKey.fetch({
+      factorModel.fetch({
         // model, resp, options
         success: function(model) {
           resolve(model);
@@ -166,7 +172,7 @@ _.extend(Authenticator.prototype, {
         exp: (timestamp + (2 * 60)),
         nbf: (timestamp - (2 * 60)),
         tx: txId,
-        result: 'APPROVE'
+        result: approve ? 'APPROVE' : 'REJECT'
       };
 
       // header, typ is fixed value.
@@ -180,7 +186,7 @@ _.extend(Authenticator.prototype, {
           name: "RSASSA-PKCS1-v1_5",
           hash: {name: "SHA-256"}
         },
-        factorKey.get('privateKey'),
+        factorModel.get('privateKey'),
         Uint8ArrayBuffer.toUint8Array(segments.join('.')))
       .then(function(signature) {
         var base64 = Uint8ArrayBuffer.toBase64(new Uint8Array(signature));
@@ -195,7 +201,7 @@ _.extend(Authenticator.prototype, {
             'Authorization': 'SSWS ' + jwt
           },
           data: {
-            result: 'APPROVE'
+            result: approve ? 'APPROVE' : 'REJECT'
           },
           withCredentials: false
         });

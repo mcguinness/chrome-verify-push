@@ -2,15 +2,20 @@
   "name": "okta-verify-push",
   "version": "0.1.2",
   "description": "Okta Verify Push Authenticator Chrome Extension",
+  "private": true,
+  "author": {
+    "name": "Karl McGuinness",
+    "email": "dev@karlmcguinness.com"
+  },
+  "homepage": "https://github.com/mcguinness/chrome-verify-push",
   "dependencies": {
     "axios": "^0.5.4",
     "backbone": "^1.2.1",
     "backbone-indexeddb": "0.0.13",
-    "base64url": "^1.0.4",
     "jquery": "^2.1.4",
     "js-base64": "^2.1.8",
-    "jsqrcode": "0.0.6",
-    "underscore": "^1.8.3"
+    "underscore": "^1.8.3",
+    "zxing": "^0.1.0"
   },
   "devDependencies": {
     "browserify": "~7.0.3",

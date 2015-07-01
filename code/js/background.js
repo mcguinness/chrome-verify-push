@@ -1,5 +1,6 @@
 ;(function() {
-  var qrcode = require('jsqrcode')();
+
+  var qrcode = require('zxing');
   var Authenticator = require('./modules/authenticator');
   var factor = new Authenticator();
 
@@ -7,28 +8,42 @@
 
   var captureQrCode = function(tab, left, top, width, height) {
     chrome.tabs.captureVisibleTab(tab.windowId, {format: 'png'}, function (dataUrl) {
-        var qr = new window.Image();
-        qr.src = dataUrl;
+        var qrImage = new window.Image();
+        qrImage.src = dataUrl;
 
-        var captureCanvas = document.getElementById('__ga_captureCanvas__');
+        var captureCanvas = document.getElementById('__okta_captureCanvas__');
         if (!captureCanvas) {
             captureCanvas = document.createElement('canvas');
-            captureCanvas.id = '__ga_captureCanvas__';
+            captureCanvas.id = '__okta_captureCanvas__';
             document.body.appendChild(captureCanvas);
         }
         captureCanvas.width = width;
         captureCanvas.height = height;
-        captureCanvas.getContext('2d').drawImage(qr, left, top, width, height, 0, 0, width, height);
+        captureCanvas.getContext('2d').drawImage(qrImage, left, top, width, height, 0, 0, width, height);
         var qrDataUrl = captureCanvas.toDataURL();
-        console.log(captureCanvas);
-        console.log(qrDataUrl);
-        var result;
-        try {
-          result = qrcode.decode(captureCanvas);
-          console.log('result of qr code: ' + result);
-        } catch(e){
-          console.log('unable to read qr code');
-        }
+        console.log('Captured QRCode: %s', qrDataUrl);
+
+        qrcode.decode(qrDataUrl, function(err, result) {
+          if (err !== null) {
+            chrome.notifications.create(null, {
+              type: 'basic',
+              title: 'Unable to Enroll Okta Verify Push!',
+              message: err,
+              iconUrl: '/images/mfa-okta-verify.png'
+            });
+          } else {
+            console.log('Decoded QRCode: %s', result);
+            factor.enrollProtocol(result)
+              .then(function(model) {
+                chrome.notifications.create(null, {
+                  type: 'basic',
+                  title: 'Okta Verify Push Enrolled',
+                  message: 'Successfully enrolled factor for ' + model.get('login'),
+                  iconUrl: '/images/mfa-okta-verify.png'
+                });
+              });
+          }
+        });
     });
   };
 
@@ -39,22 +54,21 @@
     notifications[message.data.transactionId] = message.data;
 
     var items = [
-      { title: "Time:", message: message.data.transactionTime },
+      { title: "Time:", message: new Date(Date.parse(message.data.transactionTime)).toString() },
       { title: "Server:", message: message.data.server },
-      { title: "Browser:", message: message.data.clientBrowser },
-      { title: "OS:", message: message.data.clientOS },
+      { title: "Device:", message: message.data.clientBrowser + ' ' + message.data.clientOS },
       { title: "IP Address:", message: message.data.clientIP }
     ];
 
     if (message.data.clientLocation) {
-      items.push({ title: "Location:", message: message.data.clientLocation});
+      items.push({ title: "Location:", message: message.data.clientLocation });
     }
 
     chrome.notifications.create(message.data.transactionId, {
       type:    'list',
       iconUrl: '/images/mfa-okta-verify.png',
       title:   message.data.subject,
-      message: message.data.userDisplayName + ' (' + message.data.username + ')',
+      message: message.data.userDisplayName + '\n(' + message.data.username + ')',
       contextMessage: message.data.userDisplayName + ' (' + message.data.username + ')',
       items: items,
       buttons: [{
@@ -72,8 +86,11 @@
     delete notifications[notificationId];
 
     if (item && buttonIndex === 0) {
-        console.log("Accept");
-        factor.verify(item.factorId, item.userId, item.transactionId, item.server);
+        console.log("Accept: " + item.transactionId);
+        factor.verify(item.transactionId, true, item.factorId, item.userId, item.server);
+    } else {
+        console.log("Reject" + item.transactionId);
+        factor.verify(item.transactionId, false, item.factorId, item.userId, item.server);
     }
   });
 

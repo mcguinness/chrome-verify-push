@@ -1,36 +1,59 @@
 {
   "manifest_version": 2,
-  "name": "Okta Verify",
+  "name": "Okta Verify Push Authenticator",
   "version": "1.0.0.0",
-  "description": "Okta Verify",
-  "icons": { "128": "images/mfa-okta-verify.png" },
+  "description": "Okta Verify Push",
+  "icons": {
+    "128": "images/mfa-okta-verify.png"
+  },
   "browser_action": {
     "default_icon": "images/mfa-okta-verify.png",
     "default_popup": "html/popup.html"
   },
-  "background": { "scripts": ["js/background.js"] },
+  "background": {
+    "scripts": [
+      "js/background.js"
+    ]
+  },
   "options_page": "html/options.html",
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "css": ["css/common.css"],
-      "js": ["js/content.js"]
+      "matches": [
+        "http://*.okta1.com/*",
+        "https://*.okta1.com/*",
+        "https://*.okta.com/*",
+        "https://*.oktapreview.com/*"
+      ],
+      "css": [
+        "css/content.css"
+      ],
+      "js": [
+        "js/content.js"
+      ],
+      "run_at": "document_end"
     }
   ],
   "optional_permissions": [
-      "clipboardWrite"
+    "clipboardWrite"
   ],
   "permissions": [
     "activeTab",
     "background",
-    "clipboardWrite",
     "gcm",
     "geolocation",
     "idle",
     "notifications",
     "storage",
-    "http://*.okta1.com/"
+    "http://*.okta1.com/*",
+    "https://*.okta1.com/*",
+    "https://*.okta.com/*",
+    "https://*.oktapreview.com/*"
   ],
-  "web_accessible_resources": [ "js/*", "html/*", "css/*", "images/*" ],
+  "web_accessible_resources": [
+    "js/*",
+    "html/*",
+    "css/*",
+    "images/*"
+  ],
   "content_security_policy": "script-src 'self'; object-src 'self'"
 }
