@@ -1,13 +1,13 @@
 module.exports = function(grunt) {
 
   var pkg = grunt.file.readJSON('package.json');
-  var mnf = grunt.file.readJSON('code/manifest.json');
+  var mnf = grunt.file.readJSON('src/manifest.json');
 
   var fileMaps = { browserify: {}, uglify: {} };
-  var file, files = grunt.file.expand({cwd:'code/js'}, ['*.js']);
+  var file, files = grunt.file.expand({cwd:'src/js'}, ['*.js']);
   for (var i = 0; i < files.length; i++) {
     file = files[i];
-    fileMaps.browserify['build/unpacked-dev/js/' + file] = 'code/js/' + file;
+    fileMaps.browserify['build/unpacked-dev/js/' + file] = 'src/js/' + file;
     fileMaps.uglify['build/unpacked-prod/js/' + file] = 'build/unpacked-dev/js/' + file;
   }
 
@@ -26,13 +26,13 @@ module.exports = function(grunt) {
 
     jshint: {
       options: grunt.file.readJSON('lint-options.json'), // see http://www.jshint.com/docs/options/
-      all: { src: ['package.json', 'lint-options.json', 'Gruntfile.js', 'code/**/*.js',
-                   'code/**/*.json', '!code/js/libs/*'] }
+      all: { src: ['package.json', 'lint-options.json', 'Gruntfile.js', 'src/**/*.js',
+                   'src/**/*.json', '!src/js/libs/*'] }
     },
 
     mochaTest: {
       options: { colors: true, reporter: 'spec' },
-      files: ['code/**/*.spec.js']
+      files: ['src/**/*.spec.js']
     },
 
     copy: {
@@ -43,14 +43,14 @@ module.exports = function(grunt) {
               expand: true,
               cwd: 'bower_components/bootstrap-sass/assets/javascripts/',
               src: ['**/bootstrap*.js'],
-              dest: 'code/dist/'
+              dest: 'src/dist/'
           },
 
           {
               expand: true,
               cwd: 'bower_components/jquery/dist/',
               src: ['**/*.js', '**/*.map'],
-              dest: 'code/dist/'
+              dest: 'src/dist/'
           },
 
           // Fonts.
@@ -60,7 +60,7 @@ module.exports = function(grunt) {
               flatten: true,
               cwd: 'bower_components/',
               src: ['bootstrap-sass/assets/fonts/**'],
-              dest: 'code/fonts/'
+              dest: 'src/fonts/'
           },
 
           // Stylesheets
@@ -68,12 +68,12 @@ module.exports = function(grunt) {
               expand: true,
               cwd: 'bower_components/bootstrap-sass/assets/stylesheets/',
               src: ['**/*.scss'],
-              dest: 'code/scss/'
+              dest: 'src/scss/'
           },
 
           {
             expand: true,
-            cwd: 'code/',
+            cwd: 'src/',
             src: ['**', '!js/**', '!**/*.md'],
             dest: 'build/unpacked-dev/'
           }
@@ -125,15 +125,15 @@ module.exports = function(grunt) {
             outputStyle: 'compressed'
         },
         files: {
-            'code/css/common.css': 'code/scss/common.scss'
+            'src/css/common.css': 'src/scss/common.scss'
         }
       }
     },
 
     watch: {
       js: {
-        files: ['package.json', 'lint-options.json', 'Gruntfile.js', 'code/**/*.js',
-                'code/**/*.json', '!code/js/libs/*'],
+        files: ['package.json', 'lint-options.json', 'Gruntfile.js', 'src/**/*.js',
+                'src/**/*.json', '!src/js/libs/*'],
         tasks: ['test']
       }
     }

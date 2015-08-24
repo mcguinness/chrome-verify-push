@@ -43,8 +43,9 @@ var Authenticator = function() {
 
 _.extend(Authenticator.prototype, {
 
-  enrollProtocol: function(enrollUrl) {
+  enrollWithUrl: function(enrollUrl) {
     var urlParts = url.parse(enrollUrl, true);
+    console.log(urlParts);
     return this.enroll(urlParts.query.f, urlParts.query.s, urlParts.query.t);
   },
 

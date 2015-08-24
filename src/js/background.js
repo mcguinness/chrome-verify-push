@@ -33,7 +33,7 @@
             });
           } else {
             console.log('Decoded QRCode: %s', result);
-            factor.enrollProtocol(result)
+            factor.enrollWithUrl(result)
               .then(function(model) {
                 chrome.notifications.create(null, {
                   type: 'basic',

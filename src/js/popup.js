@@ -21,8 +21,11 @@
       $('#enroll').click(function() {
         var inputUrl = $('#url').val();
         if (inputUrl) {
+          //html decode
+          inputUrl = $("<div />").html(inputUrl).text();
+
           var factor = new Authenticator();
-          factor.enroll(inputUrl)
+          factor.enrollWithUrl(inputUrl)
             .then(function(resp) {
               console.log(resp);
             })
